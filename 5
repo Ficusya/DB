@@ -1,0 +1,60 @@
+1
+select location_id, street_address, city, state_province, country_id, country_name from locations
+natural join countries;
+2
+select last_name, department_id, department_name from employees
+natural join departments;
+3
+select last_name, job_id, department_id, department_name from employees
+natural join departments
+natural join locations
+where city = 'Toronto';
+4
+select e.employee_id, e.last_name, e.manager_id, man.last_name 
+from employees e
+inner join employees man
+on(e.manager_id = man.employee_id);
+5
+select e.employee_id, e.last_name, e.manager_id, man.last_name 
+from employees e
+left join employees man
+on(e.manager_id = man.employee_id);
+6
+select d.department_id, d.department_name, e.employee_id, e.last_name
+from departments d
+inner join employees e
+on(d.manager_id = e.employee_id);
+7
+select d.department_id, d.department_name, man.last_name, e.employee_id, e.last_name
+from departments d
+inner join employees e
+on(d.manager_id = e.manager_id)
+inner join employees man
+on(d.manager_id = man.employee_id);
+8
+select e.employee_id, e.last_name, e.hire_date, d.hire_date
+from employees d
+join employees e
+on(e.hire_date > d.hire_date and d.last_name = 'Davies');
+9
+select e.employee_id, e.last_name, e.hire_date, man.last_name, man.hire_date
+from employees man
+join employees e
+on(e.hire_date < man.hire_date and e.manager_id = man.employee_id);
+10
+select d.department_id, d.department_name, count(e.employee_id)
+from employees e
+inner join departments d
+on(e.department_id = d.department_id)
+group by d.department_id, d.department_name;
+11
+select e.employee_id, count(h.job_id) as job_count
+from employees e
+join job_history h
+on(e.employee_id = h.employee_id)
+group by e.employee_id having count(h.job_id) > 1;
+12
+select e.employee_id, e.last_name, man.employee_id, man.last_name
+from employees man
+join employees e
+on(e.salary > man.salary and e.manager_id = man.employee_id);
