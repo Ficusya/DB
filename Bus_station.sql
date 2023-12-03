@@ -148,16 +148,48 @@ COMMENT ON TABLE bus_stop IS 'Остановка';
 COMMENT ON COLUMN bus_stop.ID IS 'Уникальный идентификатор остановки';
 COMMENT ON COLUMN bus_stop.bs_name IS 'Название остановки';
 
+CREATE TABLE routes (
+	ID serial NOT NULL,
+	route_name TEXT NOT NULL,
+	start_point_id int NOT NULL,
+	CONSTRAINT routes_pk PRIMARY KEY (ID)
+) WITH (
+  OIDS=FALSE
+);	
+
 COMMENT ON TABLE routes IS 'Маршрут';
 COMMENT ON COLUMN routes.ID IS 'Уникальный идентификатор маршрута';
 COMMENT ON COLUMN routes.route_name IS 'Название маршрута';
 COMMENT ON COLUMN routes.start_point_id IS 'Идентификатор начальной остановки маршрута';
+
+CREATE TABLE route_points (
+	ID serial,
+	route_id int NOT NULL,
+	bus_stop_id int NOT NULL,
+	next_point_id int NOT NULL,
+	CONSTRAINT route_points_pk PRIMARY KEY (ID)
+) WITH (
+  OIDS=FALSE
+);
 
 COMMENT ON TABLE route_points IS 'Точка маршрута';
 COMMENT ON COLUMN route_points.ID IS 'Уникальный идентификатор точки маршрута';
 COMMENT ON COLUMN route_points.route_id IS 'Идентификатор маршрута';
 COMMENT ON COLUMN route_points.bus_stop_id IS 'Идентификатор остановки';
 COMMENT ON COLUMN route_points.next_point_id IS 'Идентификатор следующей точки маршрута';
+
+CREATE TABLE Race (
+	ID serial NOT NULL,
+	start_date serial NOT NULL,
+	finish_date serial NOT NULL,
+	duration serial NOT NULL,
+	route_id int NOT NULL,
+	bus_id int NOT NULL,
+	driver_id int NOT NULL,
+	CONSTRAINT Race_pk PRIMARY KEY (ID)
+) WITH (
+  OIDS=FALSE
+);
 
 COMMENT ON TABLE Race IS 'Рейс';
 COMMENT ON COLUMN Race.ID IS 'Уникальный идентификатор рейса';
@@ -167,6 +199,22 @@ COMMENT ON COLUMN Race.duration IS 'Продолжительность рейс�
 COMMENT ON COLUMN Race.route_id IS 'Идентификатор маршрута';
 COMMENT ON COLUMN Race.bus_id IS 'Идентификатор автобуса';
 COMMENT ON COLUMN Race.driver_id IS 'Идентификатор водителя';
+
+CREATE TABLE Passangers (
+	ID serial NOT NULL,
+	first_name TEXT NOT NULL,
+	second_name TEXT NOT NULL,
+	last_name TEXT NOT NULL,
+	birthdate DATE NOT NULL,
+	doc_type int NOT NULL,
+	doc_series int NOT NULL,
+	doc_num int NOT NULL,
+	sex TEXT NOT NULL,
+	phone_num int NOT NULL,
+	CONSTRAINT Passangers_pk PRIMARY KEY (ID)
+) WITH (
+  OIDS=FALSE
+);
 
 COMMENT ON TABLE Passangers IS 'Пассажиры';
 COMMENT ON COLUMN Passangers.ID IS 'Уникальный идентификатор пассажира';
@@ -179,6 +227,18 @@ COMMENT ON COLUMN Passangers.doc_series IS 'Серия документа пас
 COMMENT ON COLUMN Passangers.doc_num IS 'Номер документа пассажира';
 COMMENT ON COLUMN Passangers.sex IS 'Пол пассажира';
 COMMENT ON COLUMN Passangers.phone_num IS 'Номер телефона пассажира';
+
+CREATE TABLE RaceList (
+	ID serial NOT NULL,
+	race_id int NOT NULL,
+	passanger_id int NOT NULL,
+	seat_num int NOT NULL,
+	route_start int NOT NULL,
+	route_finish int NOT NULL,
+	CONSTRAINT RaceList_pk PRIMARY KEY (ID)
+) WITH (
+  OIDS=FALSE
+);
 
 COMMENT ON TABLE RaceList IS 'Список рейсов';
 COMMENT ON COLUMN RaceList.ID IS 'Уникальный идентификатор записи в списке рейсов';
