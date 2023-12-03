@@ -1,4 +1,4 @@
-DROP SCHEMA IF EXISTS station;
+DROP SCHEMA IF EXISTS station CASCADE;
 
 CREATE SCHEMA IF NOT EXISTS station
     AUTHORIZATION kulishkin_in;
@@ -11,7 +11,7 @@ GRANT ALL ON SCHEMA station TO kulishkin_in;
 ALTER ROLE kulishkin_in IN DATABASE kulishkin_in_db
     SET search_path TO station, public;
 
-drop table if exists bus, marks, models, employees, positions, bus_stop cascade;
+drop table if exists Bus, Marks, Models, Employees, Positions, Bus_stop cascade;
 
 CREATE TABLE  IF NOT EXISTS station.Bus (
 	ID serial NOT NULL,
@@ -299,23 +299,23 @@ INSERT INTO station.Passangers (first_name, second_name, last_name, birthdate, d
 ('Елена', 'Евгеньевна', 'Евгеньева', '1995-06-06', 1, 6666, 666666, 'Ж', '6666666666'),
 ('Дмитрий', 'Дмитриевич', 'Дмитриев', '1996-07-07', 1, 7777, 777777, 'М', '7777777777');
 
-ALTER TABLE station.Bus ADD CONSTRAINT Bus_fk_Model_id FOREIGN KEY (Model_id) REFERENCES Models(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
+ALTER TABLE station.Bus ADD CONSTRAINT Bus_fk_Model_id FOREIGN KEY (Model_id) REFERENCES station.Models(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
 
-ALTER TABLE station.Models ADD CONSTRAINT Models_fk_Mark_ID FOREIGN KEY (Mark_ID) REFERENCES Marks(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
+ALTER TABLE station.Models ADD CONSTRAINT Models_fk_Mark_ID FOREIGN KEY (Mark_ID) REFERENCES station.Marks(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
 
-ALTER TABLE station.Employees ADD CONSTRAINT Employees_fk_pos_id FOREIGN KEY (pos_id) REFERENCES Positions(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
+ALTER TABLE station.Employees ADD CONSTRAINT Employees_fk_pos_id FOREIGN KEY (pos_id) REFERENCES station.Positions(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
 
-ALTER TABLE station.routes ADD CONSTRAINT routes_fk_start_point_id FOREIGN KEY (start_point_id) REFERENCES route_points(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
+ALTER TABLE station.routes ADD CONSTRAINT routes_fk_start_point_id FOREIGN KEY (start_point_id) REFERENCES station.route_points(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
 
-ALTER TABLE station.route_points ADD CONSTRAINT route_points_fk_route_id FOREIGN KEY (route_id) REFERENCES routes(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
-ALTER TABLE station.route_points ADD CONSTRAINT route_points_fk_bus_stop_id FOREIGN KEY (bus_stop_id) REFERENCES bus_stop(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
-ALTER TABLE station.route_points ADD CONSTRAINT route_points_fk_next_point_id FOREIGN KEY (next_point_id) REFERENCES route_points(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
+ALTER TABLE station.route_points ADD CONSTRAINT route_points_fk_route_id FOREIGN KEY (route_id) REFERENCES station.routes(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
+ALTER TABLE station.route_points ADD CONSTRAINT route_points_fk_bus_stop_id FOREIGN KEY (bus_stop_id) REFERENCES station.bus_stop(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
+ALTER TABLE station.route_points ADD CONSTRAINT route_points_fk_next_point_id FOREIGN KEY (next_point_id) REFERENCES station.route_points(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
 
-ALTER TABLE station.Race ADD CONSTRAINT Race_fk_route_id FOREIGN KEY (route_id) REFERENCES routes(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
-ALTER TABLE station.Race ADD CONSTRAINT Race_fk_bus_id FOREIGN KEY (bus_id) REFERENCES Bus(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
-ALTER TABLE station.Race ADD CONSTRAINT Race_fk_driver_id FOREIGN KEY (driver_id) REFERENCES Employees(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
+ALTER TABLE station.Race ADD CONSTRAINT Race_fk_route_id FOREIGN KEY (route_id) REFERENCES station.routes(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
+ALTER TABLE station.Race ADD CONSTRAINT Race_fk_bus_id FOREIGN KEY (bus_id) REFERENCES station.Bus(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
+ALTER TABLE station.Race ADD CONSTRAINT Race_fk_driver_id FOREIGN KEY (driver_id) REFERENCES station.Employees(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
 
-ALTER TABLE station.RaceList ADD CONSTRAINT RaceList_fk_race_id FOREIGN KEY (race_id) REFERENCES Race(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
-ALTER TABLE station.RaceList ADD CONSTRAINT RaceList_fk_passanger_id FOREIGN KEY (passanger_id) REFERENCES Passangers(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
-ALTER TABLE station.RaceList ADD CONSTRAINT RaceList_fk_route_start FOREIGN KEY (route_start) REFERENCES route_points(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
-ALTER TABLE station.RaceList ADD CONSTRAINT RaceList_fk_route_finish FOREIGN KEY (route_finish) REFERENCES route_points(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
+ALTER TABLE station.RaceList ADD CONSTRAINT RaceList_fk_race_id FOREIGN KEY (race_id) REFERENCES station.Race(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
+ALTER TABLE station.RaceList ADD CONSTRAINT RaceList_fk_passanger_id FOREIGN KEY (passanger_id) REFERENCES station.Passangers(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
+ALTER TABLE station.RaceList ADD CONSTRAINT RaceList_fk_route_start FOREIGN KEY (route_start) REFERENCES station.route_points(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
+ALTER TABLE station.RaceList ADD CONSTRAINT RaceList_fk_route_finish FOREIGN KEY (route_finish) REFERENCES station.route_points(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
