@@ -11,7 +11,7 @@ GRANT ALL ON SCHEMA station TO kulishkin_in;
 ALTER ROLE kulishkin_in IN DATABASE kulishkin_in_db
     SET search_path TO station, public;
 
-drop table if exists bus, marks, models, employees, positions, bus_stop cascade
+drop table if exists bus, marks, models, employees, positions, bus_stop cascade;
 
 CREATE TABLE IF NOT EXISTS station.Bus (
 	ID serial NOT NULL,
@@ -83,7 +83,7 @@ INSERT INTO Models (Mark_ID, ModelName, FuelStorage, Capacity) VALUES
 (1, 'Volvo 9700', 500, 50),
 (2, 'Mercedes-Benz Tourismo', 450, 48),
 (3, 'Iveco Magelys', 400, 46),
-(4, 'MAN Lion's Coach', 550, 52),
+(4, 'MAN Lions Coach', 550, 52),
 (5, 'Scania Touring', 600, 54);
 
 CREATE TABLE IF NOT EXISTS station.Employees (
