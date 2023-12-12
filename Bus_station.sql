@@ -11,7 +11,7 @@ GRANT ALL ON SCHEMA station TO kulishkin_in;
 ALTER ROLE kulishkin_in IN DATABASE kulishkin_in_db
     SET search_path TO station, public;
 
-drop table if exists Bus, Marks, Models, Employees, Positions, Bus_stop cascade;
+drop table if exists Bus, Marks, Models, Employees, Positions, Bus_stop, Routes, Route_poins, Race, Passangers, RaceListf cascade;
 
 
 
@@ -367,3 +367,18 @@ JOIN station.RaceList l ON p.ID = l.passanger_id
 JOIN station.Race r ON l.race_id = r.ID
 JOIN station.routes t ON r.route_id = t.ID
 WHERE r.start_date = '2023-12-01 08:00:00' AND t.route_name = 'Автовокзал - Аэропорт';
+
+
+CREATE OR REPLACE FUNCTION update_last_service_date() RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE station.Bus b
+  SET last_service_date = NEW.finish_date
+  WHERE b.id = NEW.bus_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_last_service_date
+AFTER UPDATE ON station.Race
+FOR EACH ROW
+EXECUTE FUNCTION update_last_service_date();
