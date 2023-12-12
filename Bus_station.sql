@@ -13,6 +13,8 @@ ALTER ROLE kulishkin_in IN DATABASE kulishkin_in_db
 
 drop table if exists Bus, Marks, Models, Employees, Positions, Bus_stop cascade;
 
+
+
 CREATE TABLE  IF NOT EXISTS station.Bus (
 	ID serial NOT NULL,
 	Model_id int NOT NULL,
@@ -42,6 +44,8 @@ INSERT INTO station.Bus (Model_id, Year, reg_date, retire_date, last_service_dat
 (4, 2020, '2020-02-02', '2030-02-01', '2020-08-08', 'D004DD'),
 (5, 2021, '2021-03-03', '2031-03-02', '2021-04-04', 'E005EE');
 
+
+
 CREATE TABLE IF NOT EXISTS station.Marks (
 	ID serial NOT NULL,
 	MarkName TEXT NOT NULL UNIQUE,
@@ -60,6 +64,8 @@ INSERT INTO station.Marks (MarkName) VALUES
 ('Iveco'),
 ('MAN'),
 ('Scania');
+
+
 
 CREATE TABLE IF NOT EXISTS station.Models (
 	ID serial NOT NULL,
@@ -85,6 +91,8 @@ INSERT INTO station.Models (Mark_ID, ModelName, FuelStorage, Capacity) VALUES
 (3, 'Iveco Magelys', 400, 46),
 (4, 'MAN Lions Coach', 550, 52),
 (5, 'Scania Touring', 600, 54);
+
+
 
 CREATE TABLE IF NOT EXISTS station.Employees (
 	ID serial NOT NULL,
@@ -117,6 +125,8 @@ INSERT INTO station.Employees (first_name, second_name, last_name, birthdate, hi
 ('Анна', 'Андреевна', 'Андреева', '1983-04-04', '2013-04-04', '2033-04-04', 4),
 ('Мария', 'Михайловна', 'Михайлова', '1984-05-05', '2014-05-05', '2034-05-05', 5);
 
+
+
 CREATE TABLE IF NOT EXISTS station.Positions (
 	ID serial NOT NULL,
 	pos_name TEXT NOT NULL UNIQUE,
@@ -136,6 +146,8 @@ INSERT INTO station.Positions (pos_name) VALUES
 ('Менеджер'),
 ('Водитель');
 
+
+
 CREATE TABLE IF NOT EXISTS station.bus_stop (
 	ID serial NOT NULL,
 	bs_name TEXT NOT NULL UNIQUE,
@@ -148,6 +160,16 @@ COMMENT ON TABLE station.bus_stop IS 'Остановка';
 COMMENT ON COLUMN station.bus_stop.ID IS 'Уникальный идентификатор остановки';
 COMMENT ON COLUMN station.bus_stop.bs_name IS 'Название остановки';
 
+INSERT INTO station.bus_stop (bs_name) VALUES
+('Автовокзал'),
+('Площадь Ленина'),
+('Улица Гагарина'),
+('Парк Победы'),
+('ТЦ "Мега"'),
+('Аэропорт');
+
+
+
 CREATE TABLE station.routes (
 	ID serial NOT NULL,
 	route_name TEXT NOT NULL,
@@ -155,12 +177,20 @@ CREATE TABLE station.routes (
 	CONSTRAINT routes_pk PRIMARY KEY (ID)
 ) WITH (
   OIDS=FALSE
-);	
+);
 
 COMMENT ON TABLE station.routes IS 'Маршрут';
 COMMENT ON COLUMN station.routes.ID IS 'Уникальный идентификатор маршрута';
 COMMENT ON COLUMN station.routes.route_name IS 'Название маршрута';
 COMMENT ON COLUMN station.routes.start_point_id IS 'Идентификатор начальной остановки маршрута';
+
+INSERT INTO station.routes (route_name, start_point_id) VALUES
+('Автовокзал - Аэропорт', 1),
+('Аэропорт - Автовокзал', 6),
+('Площадь Ленина - ТЦ "Мега"', 2),
+('ТЦ "Мега" - Площадь Ленина', 5);
+
+
 
 CREATE TABLE station.route_points (
 	ID serial,
@@ -177,6 +207,26 @@ COMMENT ON COLUMN station.route_points.ID IS 'Уникальный иденти�
 COMMENT ON COLUMN station.route_points.route_id IS 'Идентификатор маршрута';
 COMMENT ON COLUMN station.route_points.bus_stop_id IS 'Идентификатор остановки';
 COMMENT ON COLUMN station.route_points.next_point_id IS 'Идентификатор следующей точки маршрута';
+
+INSERT INTO station.route_points (route_id, bus_stop_id, next_point_id) VALUES
+(1, 1, 2),
+(1, 2, 3),
+(1, 3, 4),
+(1, 4, 5),
+(1, 5, 6),
+(2, 6, 5),
+(2, 5, 4),
+(2, 4, 3),
+(2, 3, 2),
+(2, 2, 1),
+(3, 2, 3),
+(3, 3, 4),
+(3, 4, 5),
+(4, 5, 4),
+(4, 4, 3),
+(4, 3, 2);
+
+
 
 CREATE TABLE station.Race (
 	ID serial NOT NULL,
@@ -199,6 +249,18 @@ COMMENT ON COLUMN station.Race.duration IS 'Продолжительность �
 COMMENT ON COLUMN station.Race.route_id IS 'Идентификатор маршрута';
 COMMENT ON COLUMN station.Race.bus_id IS 'Идентификатор автобуса';
 COMMENT ON COLUMN station.Race.driver_id IS 'Идентификатор водителя';
+
+INSERT INTO station.Race (start_date, finish_date, duration, route_id, bus_id, driver_id) VALUES
+('2023-12-01 08:00:00', '2023-12-01 09:30:00', '01:30:00', 1, 1, 1),
+('2023-12-01 10:00:00', '2023-12-01 11:30:00', '01:30:00', 2, 1, 1),
+('2023-12-01 12:00:00', '2023-12-01 13:00:00', '01:00:00', 3, 2, 2),
+('2023-12-01 14:00:00', '2023-12-01 15:00:00', '01:00:00', 4, 2, 2),
+('2023-12-01 16:00:00', '2023-12-01 17:30:00', '01:30:00', 1, 3, 3),
+('2023-12-01 18:00:00', '2023-12-01 19:30:00', '01:30:00', 2, 3, 3),
+('2023-12-01 20:00:00', '2023-12-01 21:00:00', '01:00:00', 3, 4, 4),
+('2023-12-01 22:00:00', '2023-12-01 23:00:00', '01:00:00', 4, 4, 4);
+
+
 
 CREATE TABLE station.Passangers (
 	ID serial NOT NULL,
@@ -228,6 +290,17 @@ COMMENT ON COLUMN station.Passangers.doc_num IS 'Номер документа �
 COMMENT ON COLUMN station.Passangers.sex IS 'Пол пассажира';
 COMMENT ON COLUMN station.Passangers.phone_num IS 'Номер телефона пассажира';
 
+INSERT INTO station.Passangers (first_name, second_name, last_name, birthdate, doc_type, doc_series, doc_num, sex, phone_num) VALUES
+('Иван', 'Иванович', 'Иванов', '1990-01-01', 1, 1111, 111111, 'М', '1111111111'),
+('Петр', 'Петрович', 'Петров', '1991-02-02', 1, 2222, 222222, 'М', '2222222222'),
+('Анна', 'Андреевна', 'Андреева', '1992-03-03', 1, 3333, 333333, 'Ж', '3333333333'),
+('Мария', 'Михайловна', 'Михайлова', '1993-04-04', 1, 4444, 444444, 'Ж', '4444444444'),
+('Сергей', 'Сергеевич', 'Сергеев', '1994-05-05', 1, 5555, 555555, 'М', '5555555555'),
+('Елена', 'Евгеньевна', 'Евгеньева', '1995-06-06', 1, 6666, 666666, 'Ж', '6666666666'),
+('Дмитрий', 'Дмитриевич', 'Дмитриев', '1996-07-07', 1, 7777, 777777, 'М', '7777777777');
+
+
+
 CREATE TABLE station.RaceList (
 	ID serial NOT NULL,
 	race_id int NOT NULL,
@@ -248,56 +321,7 @@ COMMENT ON COLUMN station.RaceList.seat_num IS 'Номер места';
 COMMENT ON COLUMN station.RaceList.route_start IS 'Идентификатор начальной точки маршрута';
 COMMENT ON COLUMN station.RaceList.route_finish IS 'Идентификатор конечной точки маршрута';
 
-INSERT INTO station.bus_stop (bs_name) VALUES
-('Автовокзал'),
-('Площадь Ленина'),
-('Улица Гагарина'),
-('Парк Победы'),
-('ТЦ "Мега"'),
-('Аэропорт');
 
-INSERT INTO station.routes (route_name, start_point_id) VALUES
-('Автовокзал - Аэропорт', 1),
-('Аэропорт - Автовокзал', 6),
-('Площадь Ленина - ТЦ "Мега"', 2),
-('ТЦ "Мега" - Площадь Ленина', 5);
-
-INSERT INTO station.route_points (route_id, bus_stop_id, next_point_id) VALUES
-(1, 1, 2),
-(1, 2, 3),
-(1, 3, 4),
-(1, 4, 5),
-(1, 5, 6),
-(2, 6, 5),
-(2, 5, 4),
-(2, 4, 3),
-(2, 3, 2),
-(2, 2, 1),
-(3, 2, 3),
-(3, 3, 4),
-(3, 4, 5),
-(4, 5, 4),
-(4, 4, 3),
-(4, 3, 2);
-
-INSERT INTO station.Race (start_date, finish_date, duration, route_id, bus_id, driver_id) VALUES
-('2023-12-01 08:00:00', '2023-12-01 09:30:00', '01:30:00', 1, 1, 1),
-('2023-12-01 10:00:00', '2023-12-01 11:30:00', '01:30:00', 2, 1, 1),
-('2023-12-01 12:00:00', '2023-12-01 13:00:00', '01:00:00', 3, 2, 2),
-('2023-12-01 14:00:00', '2023-12-01 15:00:00', '01:00:00', 4, 2, 2),
-('2023-12-01 16:00:00', '2023-12-01 17:30:00', '01:30:00', 1, 3, 3),
-('2023-12-01 18:00:00', '2023-12-01 19:30:00', '01:30:00', 2, 3, 3),
-('2023-12-01 20:00:00', '2023-12-01 21:00:00', '01:00:00', 3, 4, 4),
-('2023-12-01 22:00:00', '2023-12-01 23:00:00', '01:00:00', 4, 4, 4);
-
-INSERT INTO station.Passangers (first_name, second_name, last_name, birthdate, doc_type, doc_series, doc_num, sex, phone_num) VALUES
-('Иван', 'Иванович', 'Иванов', '1990-01-01', 1, 1111, 111111, 'М', '1111111111'),
-('Петр', 'Петрович', 'Петров', '1991-02-02', 1, 2222, 222222, 'М', '2222222222'),
-('Анна', 'Андреевна', 'Андреева', '1992-03-03', 1, 3333, 333333, 'Ж', '3333333333'),
-('Мария', 'Михайловна', 'Михайлова', '1993-04-04', 1, 4444, 444444, 'Ж', '4444444444'),
-('Сергей', 'Сергеевич', 'Сергеев', '1994-05-05', 1, 5555, 555555, 'М', '5555555555'),
-('Елена', 'Евгеньевна', 'Евгеньева', '1995-06-06', 1, 6666, 666666, 'Ж', '6666666666'),
-('Дмитрий', 'Дмитриевич', 'Дмитриев', '1996-07-07', 1, 7777, 777777, 'М', '7777777777');
 
 ALTER TABLE station.Bus ADD CONSTRAINT Bus_fk_Model_id FOREIGN KEY (Model_id) REFERENCES station.Models(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
 
@@ -319,3 +343,27 @@ ALTER TABLE station.RaceList ADD CONSTRAINT RaceList_fk_race_id FOREIGN KEY (rac
 ALTER TABLE station.RaceList ADD CONSTRAINT RaceList_fk_passanger_id FOREIGN KEY (passanger_id) REFERENCES station.Passangers(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
 ALTER TABLE station.RaceList ADD CONSTRAINT RaceList_fk_route_start FOREIGN KEY (route_start) REFERENCES station.route_points(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
 ALTER TABLE station.RaceList ADD CONSTRAINT RaceList_fk_route_finish FOREIGN KEY (route_finish) REFERENCES station.route_points(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+CREATE OR REPLACE VIEW high_earners AS
+SELECT e.first_name || ' ' || e.last_name AS name, e.Salary, d.Name AS department
+FROM station.Employees e
+JOIN station.Department d ON e.DeptID = d.ID
+WHERE e.Salary > (SELECT AVG(Salary) FROM station.Employees WHERE DeptID = e.DeptID);
+
+CREATE OR REPLACE VIEW race_stats AS
+SELECT r.ID, r.route_id, t.route_name, COUNT(p.ID) AS total_passengers, ROUND(COUNT(p.ID) * 100.0 / b.Capacity, 2) AS avg_occupancy
+FROM station.Race r
+JOIN station.RaceList l ON r.ID = l.race_id
+JOIN station.Passangers p ON l.passanger_id = p.ID
+JOIN station.routes t ON r.route_id = t.ID
+JOIN station.Bus b ON r.bus_id = b.ID
+GROUP BY r.ID, r.route_id, t.route_name, b.Capacity;
+
+CREATE OR REPLACE VIEW passenger_info AS
+SELECT p.first_name || ' ' || p.last_name AS name, DATE_PART('year', CURRENT_DATE) - DATE_PART('year', p.birthdate) AS age, p.sex, r.route_id, t.route_name, r.start_date
+FROM station.Passangers p
+JOIN station.RaceList l ON p.ID = l.passanger_id
+JOIN station.Race r ON l.race_id = r.ID
+JOIN station.routes t ON r.route_id = t.ID
+WHERE r.start_date = '2023-12-01 08:00:00' AND t.route_name = 'Автовокзал - Аэропорт';
