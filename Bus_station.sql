@@ -11,7 +11,8 @@ GRANT ALL ON SCHEMA station TO kulishkin_in;
 ALTER ROLE kulishkin_in IN DATABASE kulishkin_in_db
     SET search_path TO station, public;
 
-drop table if exists Bus, Marks, Models, Employees, Positions, Bus_stop, Routes, Route_poins, Race, Passangers, RaceListf cascade;
+drop table if exists station.Bus, station.Marks, station.Models, station.Employees, station.Positions, 
+	station.Bus_stop, station.Routes, station.Route_poins, station.Race, station.Passangers, station.RaceList cascade;
 
 
 
