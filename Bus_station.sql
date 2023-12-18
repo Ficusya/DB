@@ -346,28 +346,40 @@ ALTER TABLE station.RaceList ADD CONSTRAINT RaceList_fk_route_start FOREIGN KEY 
 ALTER TABLE station.RaceList ADD CONSTRAINT RaceList_fk_route_finish FOREIGN KEY (route_finish) REFERENCES station.route_points(ID) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
-CREATE OR REPLACE VIEW high_earners AS
-SELECT e.first_name || ' ' || e.last_name AS name, e.Salary, d.Name AS department
-FROM station.Employees e
-JOIN station.Department d ON e.DeptID = d.ID
-WHERE e.Salary > (SELECT AVG(Salary) FROM station.Employees WHERE DeptID = e.DeptID);
 
-CREATE OR REPLACE VIEW race_stats AS
-SELECT r.ID, r.route_id, t.route_name, COUNT(p.ID) AS total_passengers, ROUND(COUNT(p.ID) * 100.0 / b.Capacity, 2) AS avg_occupancy
+CREATE VIEW station.RaceInfo AS
+SELECT r.ID AS RaceID, r.Departure, r.Arrival, b.gosnum AS BusNumber, e.first_name || ' ' || e.last_name AS DriverName
 FROM station.Race r
-JOIN station.RaceList l ON r.ID = l.race_id
-JOIN station.Passangers p ON l.passanger_id = p.ID
-JOIN station.routes t ON r.route_id = t.ID
-JOIN station.Bus b ON r.bus_id = b.ID
-GROUP BY r.ID, r.route_id, t.route_name, b.Capacity;
+JOIN station.Bus b ON r.BusID = b.ID
+JOIN station.Employees e ON r.DriverID = e.ID;
 
-CREATE OR REPLACE VIEW passenger_info AS
-SELECT p.first_name || ' ' || p.last_name AS name, DATE_PART('year', CURRENT_DATE) - DATE_PART('year', p.birthdate) AS age, p.sex, r.route_id, t.route_name, r.start_date
+CREATE VIEW station.RouteInfo AS
+SELECT rt.route_name AS RouteName, bs.bs_name AS BusStopName, rp.next_point_id AS NextPointID
+FROM station.routes rt
+JOIN station.route_points rp ON rt.ID = rp.route_id
+JOIN station.bus_stop bs ON rp.bus_stop_id = bs.ID;
+
+CREATE VIEW station.PassangerInfo AS
+SELECT p.first_name || ' ' || p.last_name AS PassangerName, p.phone_num AS PhoneNum, rl.seat_num AS SeatNum, r.Departure, r.Arrival
 FROM station.Passangers p
-JOIN station.RaceList l ON p.ID = l.passanger_id
-JOIN station.Race r ON l.race_id = r.ID
-JOIN station.routes t ON r.route_id = t.ID
-WHERE r.start_date = '2023-12-01 08:00:00' AND t.route_name = 'Автовокзал - Аэропорт';
+JOIN station.RaceList rl ON p.ID = rl.passanger_id
+JOIN station.Race r ON rl.race_id = r.ID;
+
+CREATE VIEW station.ModelInfo AS
+SELECT m.ModelName, k.MarkName, m.FuelStorage, m.Capacity
+FROM station.Models m
+JOIN station.Marks k ON m.Mark_ID = k.ID;
+
+CREATE VIEW station.EmployeeInfo AS
+SELECT e.first_name || ' ' || e.last_name AS EmployeeName, p.pos_name AS PositionName, e.birthdate, e.hire_date, e.retire_date
+FROM station.Employees e
+JOIN station.Positions p ON e.pos_id = p.ID;
+
+CREATE VIEW station.BusStopInfo AS
+SELECT bs.bs_name AS BusStopName, rp.next_point_id AS Distance
+FROM station.bus_stop bs
+JOIN station.route_points rp ON bs.ID = rp.bus_stop_id;
+
 
 
 CREATE OR REPLACE FUNCTION update_last_service_date() RETURNS TRIGGER AS $$
@@ -383,3 +395,59 @@ CREATE TRIGGER update_last_service_date
 AFTER UPDATE ON station.Race
 FOR EACH ROW
 EXECUTE FUNCTION update_last_service_date();
+
+
+
+CREATE PROCEDURE generate_data @n INT AS
+BEGIN
+  DECLARE @i INT = 1;
+  WHILE @i <= @n
+  BEGIN
+    EXEC insert_employee;
+    EXEC insert_passanger;
+    SET @i = @i + 1;
+  END;
+END;
+
+CREATE PROCEDURE insert_employee AS
+BEGIN
+  DECLARE @RFC VARCHAR(15) = LEFT(NEWID(), 15);
+  DECLARE @DOB DATE = DATEADD(DAY, -RAND() * 365 * 50, GETDATE());
+  DECLARE @IdPosition BIGINT = CEILING(RAND() * 10);
+  DECLARE @ReportsTo BIGINT = CEILING(RAND() * 10);
+  DECLARE @IdBranch BIGINT = CEILING(RAND() * 10);
+  DECLARE @Salary MONEY = RAND() * 100000;
+  INSERT INTO Employee (RFC, first_name, second_name, last_name, birthdate, hire_date, retire_date, pos_id)
+  VALUES (@RFC, 'Агент', '', 'Смит', @DOB, GETDATE(), DATEADD(YEAR, 10, GETDATE()), @IdPosition);
+END;
+
+CREATE PROCEDURE insert_passanger AS
+BEGIN
+  DECLARE @doc_type INT = CEILING(RAND() * 3);
+  DECLARE @doc_series INT = CEILING(RAND() * 1000);
+  DECLARE @doc_num INT = CEILING(RAND() * 1000000);
+  DECLARE @sex VARCHAR(1) = CASE WHEN RAND() < 0.5 THEN 'M' ELSE 'F' END;
+  DECLARE @phone_num VARCHAR(10) = REPLICATE('0', 10 - LEN(@i)) + CAST(@i AS VARCHAR(10));
+  INSERT INTO Passanger (first_name, second_name, last_name, birthdate, doc_type, doc_series, doc_num, sex, phone_num)
+  VALUES ('Агент', '', 'Смит', @DOB, @doc_type, @doc_series, @doc_num, @sex, @phone_num);
+END;
+
+
+
+CREATE ROLE manager;
+GRANT CREATE TABLE, CREATE VIEW, ALTER, DROP ON SCHEMA::station TO manager;
+
+CREATE ROLE driver;
+GRANT SELECT, INSERT, UPDATE, DELETE ON station.Bus, station.Employees, station.Race TO driver;
+
+CREATE ROLE passanger;
+GRANT SELECT ON station.Passangers, station.RaceList, station.Race TO passanger;
+
+CREATE USER Alice WITH PASSWORD = '1234';
+ALTER ROLE manager ADD MEMBER Alice;
+
+CREATE USER Bob WITH PASSWORD = '1234';
+ALTER ROLE driver ADD MEMBER Bob;
+
+CREATE USER Carol WITH PASSWORD = '1234';
+ALTER ROLE passanger ADD MEMBER Carol;
