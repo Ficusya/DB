@@ -398,7 +398,7 @@ EXECUTE FUNCTION update_last_service_date();
 
 
 
-CREATE PROCEDURE generate_data @n INT AS
+CREATE OR REPLACE PROCEDURE generate_data @n INT AS
 BEGIN
   DECLARE @i INT = 1;
   WHILE @i <= @n
@@ -435,19 +435,16 @@ END;
 
 
 CREATE ROLE manager;
+CREATE USER manager_user WITH PASSWORD '1234';
+GRANT manager TO manager_user;
 GRANT CREATE TABLE, CREATE VIEW, ALTER, DROP ON SCHEMA::station TO manager;
 
 CREATE ROLE driver;
-GRANT SELECT, INSERT, UPDATE, DELETE ON station.Bus, station.Employees, station.Race TO driver;
+CREATE USER driver_user WITH PASSWORD '1234';
+GRANT driver TO driver_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE station.Bus TO driver;
 
 CREATE ROLE passanger;
+CREATE USER passanger_user WITH PASSWORD '1234';
+GRANT passanger TO passanger_user;
 GRANT SELECT ON station.Passangers, station.RaceList, station.Race TO passanger;
-
-CREATE USER Alice WITH PASSWORD = '1234';
-ALTER ROLE manager ADD MEMBER Alice;
-
-CREATE USER Bob WITH PASSWORD = '1234';
-ALTER ROLE driver ADD MEMBER Bob;
-
-CREATE USER Carol WITH PASSWORD = '1234';
-ALTER ROLE passanger ADD MEMBER Carol;
