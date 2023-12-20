@@ -11,9 +11,9 @@ GRANT ALL ON SCHEMA station TO kulishkin_in;
 ALTER ROLE kulishkin_in IN DATABASE kulishkin_in_db
     SET search_path TO station, public;
 
-drop table if exists station.Bus, station.Marks, station.Models, station.Employees, station.Positions, 
+DROP TABLE IF EXISTS station.Bus, station.Marks, station.Models, station.Employees, station.Positions, 
 	station.Bus_stop, station.Routes, station.Route_poins, station.Race, station.Passangers, station.RaceList cascade;
-
+DROP ROLE IF EXISTS managerr, managerr_user, driver, driver_user, passanger, passanger_user;
 
 
 CREATE TABLE  IF NOT EXISTS station.Bus (
@@ -347,23 +347,11 @@ ALTER TABLE station.RaceList ADD CONSTRAINT RaceList_fk_route_finish FOREIGN KEY
 
 
 
-CREATE VIEW station.RaceInfo AS
-SELECT r.ID AS RaceID, r.Departure, r.Arrival, b.gosnum AS BusNumber, e.first_name || ' ' || e.last_name AS DriverName
-FROM station.Race r
-JOIN station.Bus b ON r.BusID = b.ID
-JOIN station.Employees e ON r.DriverID = e.ID;
-
 CREATE VIEW station.RouteInfo AS
 SELECT rt.route_name AS RouteName, bs.bs_name AS BusStopName, rp.next_point_id AS NextPointID
 FROM station.routes rt
 JOIN station.route_points rp ON rt.ID = rp.route_id
 JOIN station.bus_stop bs ON rp.bus_stop_id = bs.ID;
-
-CREATE VIEW station.PassangerInfo AS
-SELECT p.first_name || ' ' || p.last_name AS PassangerName, p.phone_num AS PhoneNum, rl.seat_num AS SeatNum, r.Departure, r.Arrival
-FROM station.Passangers p
-JOIN station.RaceList rl ON p.ID = rl.passanger_id
-JOIN station.Race r ON rl.race_id = r.ID;
 
 CREATE VIEW station.ModelInfo AS
 SELECT m.ModelName, k.MarkName, m.FuelStorage, m.Capacity
@@ -398,46 +386,51 @@ EXECUTE FUNCTION update_last_service_date();
 
 
 
-CREATE OR REPLACE PROCEDURE generate_data @n INT AS
+CREATE OR REPLACE PROCEDURE generate_data(n INT) AS
+$$
+DECLARE 
+	i INT;
 BEGIN
-  DECLARE @i INT = 1;
-  WHILE @i <= @n
-  BEGIN
-    EXEC insert_employee;
-    EXEC insert_passanger;
-    SET @i = @i + 1;
-  END;
+  FOR i IN 1..n LOOP
+    EXECUTE insert_employee();
+    EXECUTE insert_passanger();
+  END LOOP;
 END;
+$$ LANGUAGE plpgsql;
 
-CREATE PROCEDURE insert_employee AS
+CREATE OR REPLACE FUNCTION insert_employee() RETURNS VOID AS
+$$
+DECLARE
+	DOB DATE = DATEADD(DAY, -RAND() * 365 * 50, GETDATE());
+	IdPosition INT = CEILING(RAND() * 10);
+	RetireDate DATE = DATE_TRUNC('day', NOW() + (RANDOM() * 365 * 10 || ' days')::INTERVAL);
 BEGIN
-  DECLARE @RFC VARCHAR(15) = LEFT(NEWID(), 15);
-  DECLARE @DOB DATE = DATEADD(DAY, -RAND() * 365 * 50, GETDATE());
-  DECLARE @IdPosition BIGINT = CEILING(RAND() * 10);
-  DECLARE @ReportsTo BIGINT = CEILING(RAND() * 10);
-  DECLARE @IdBranch BIGINT = CEILING(RAND() * 10);
-  DECLARE @Salary MONEY = RAND() * 100000;
-  INSERT INTO Employee (RFC, first_name, second_name, last_name, birthdate, hire_date, retire_date, pos_id)
-  VALUES (@RFC, 'Агент', '', 'Смит', @DOB, GETDATE(), DATEADD(YEAR, 10, GETDATE()), @IdPosition);
+	INSERT INTO station.Employee (first_name, second_name, last_name, birthdate, hire_date, retire_date, pos_id)
+	VALUES ('Агент', '', 'Смит', DOB, NOW(), RetireDate, IdPosition);
 END;
+$$ LANGUAGE plpgsql;
 
-CREATE PROCEDURE insert_passanger AS
+CREATE PROCEDURE insert_passanger() AS
+$$
+DECLARE
+	i INT := CEIL(RANDOM() * 9999999999);
+	doc_type INT = CEILING(RAND() * 3);
+	doc_series INT = CEILING(RAND() * 1000);
+	doc_num INT = CEILING(RAND() * 1000000);
+	sex VARCHAR(1) = 'M';
+	phone_num VARCHAR(10) = REPLICATE('0', 10 - LEN(i)) + CAST(i AS VARCHAR(10));
 BEGIN
-  DECLARE @doc_type INT = CEILING(RAND() * 3);
-  DECLARE @doc_series INT = CEILING(RAND() * 1000);
-  DECLARE @doc_num INT = CEILING(RAND() * 1000000);
-  DECLARE @sex VARCHAR(1) = CASE WHEN RAND() < 0.5 THEN 'M' ELSE 'F' END;
-  DECLARE @phone_num VARCHAR(10) = REPLICATE('0', 10 - LEN(@i)) + CAST(@i AS VARCHAR(10));
-  INSERT INTO Passanger (first_name, second_name, last_name, birthdate, doc_type, doc_series, doc_num, sex, phone_num)
-  VALUES ('Агент', '', 'Смит', @DOB, @doc_type, @doc_series, @doc_num, @sex, @phone_num);
+	INSERT INTO Passanger (first_name, second_name, last_name, birthdate, doc_type, doc_series, doc_num, sex, phone_num)
+	VALUES ('Агент', '', 'Смит', DOB, doc_type, doc_series, doc_num, sex, phone_num);
 END;
+$$ LANGUAGE plpgsql;
 
 
 
-CREATE ROLE manager;
-CREATE USER manager_user WITH PASSWORD '1234';
-GRANT manager TO manager_user;
-GRANT CREATE TABLE, CREATE VIEW, ALTER, DROP ON SCHEMA::station TO manager;
+CREATE ROLE managerr;
+CREATE USER managerr_user WITH PASSWORD '1234';
+GRANT managerr TO managerr_user;
+GRANT SELECT, INSERT, UPDATE ON TABLE station.RaceList TO managerr;
 
 CREATE ROLE driver;
 CREATE USER driver_user WITH PASSWORD '1234';
