@@ -368,6 +368,28 @@ SELECT bs.bs_name AS BusStopName, rp.next_point_id AS Distance
 FROM station.bus_stop bs
 JOIN station.route_points rp ON bs.ID = rp.bus_stop_id;
 
+CREATE VIEW station.PassengerCountByRouteAndGender AS
+SELECT r.route_name AS Route, p.sex AS Gender, COUNT(rl.passanger_id) AS PassengerCount
+FROM station.RaceList rl
+JOIN station.Race rc ON rl.race_id = rc.ID
+JOIN station.Routes r ON rc.route_id = r.ID
+JOIN station.Passangers p ON rl.passanger_id = p.ID
+GROUP BY r.route_name, p.sex;
+
+CREATE VIEW station.BusCountByModelAndMark AS
+SELECT m.ModelName AS Model, d.MarkName AS Mark, COUNT(b.ID) AS BusCount
+FROM station.Bus b
+JOIN station.Models m ON b.Model_id = m.ID
+JOIN station.Marks d ON m.Mark_ID = d.ID
+GROUP BY m.ModelName, d.MarkName;
+
+CREATE VIEW station.FuelConsumptionByBusModel AS
+SELECT m.ModelName AS BusModel, SUM(m.FuelStorage * rc.distance) AS TotalFuel
+FROM station.Models m
+JOIN station.Bus b ON m.ID = b.Model_id
+JOIN station.Race rc ON b.ID = rc.bus_id
+GROUP BY m.ModelName;
+
 
 
 CREATE OR REPLACE FUNCTION update_last_service_date() RETURNS TRIGGER AS $$
