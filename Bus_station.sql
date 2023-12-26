@@ -426,15 +426,21 @@ $$ LANGUAGE plpgsql;
 
 CREATE ROLE managerr;
 CREATE USER managerr_user WITH PASSWORD '1234';
+GRANT CONNECT ON DATABASE kulishkin_in_db TO managerr;
+GRANT USAGE ON SCHEMA station TO managerr;
 GRANT managerr TO managerr_user;
 GRANT SELECT, INSERT, UPDATE ON TABLE station.RaceList TO managerr;
 
 CREATE ROLE driver;
 CREATE USER driver_user WITH PASSWORD '1234';
+GRANT CONNECT ON DATABASE kulishkin_in_db TO driver;
+GRANT USAGE ON SCHEMA station TO driver;
 GRANT driver TO driver_user;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE station.Bus TO driver;
 
 CREATE ROLE passanger;
 CREATE USER passanger_user WITH PASSWORD '1234';
+GRANT CONNECT ON DATABASE kulishkin_in_db TO passanger;
+GRANT USAGE ON SCHEMA station TO passanger;
 GRANT passanger TO passanger_user;
 GRANT SELECT ON station.Passangers, station.RaceList, station.Race TO passanger;
