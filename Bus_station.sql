@@ -363,7 +363,7 @@ FROM station.Employees e
 JOIN station.Positions p ON e.pos_id = p.ID;
 
 CREATE VIEW station.BusStopInfo AS
-SELECT bs.bs_name AS BusStopName, rp.next_point_id AS NextStopId
+SELECT bs.bs_name AS NextBusStopName, rp.next_point_id AS NextStopId
 FROM station.bus_stop bs
 JOIN station.route_points rp ON bs.ID = rp.bus_stop_id;
 
