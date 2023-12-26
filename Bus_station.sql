@@ -13,7 +13,6 @@ ALTER ROLE kulishkin_in IN DATABASE kulishkin_in_db
 
 DROP TABLE IF EXISTS station.Bus, station.Marks, station.Models, station.Employees, station.Positions, 
 	station.Bus_stop, station.Routes, station.Route_poins, station.Race, station.Passangers, station.RaceList cascade;
-DROP ROLE IF EXISTS managerr, managerr_user, driver, driver_user, passanger, passanger_user;
 
 
 CREATE TABLE  IF NOT EXISTS station.Bus (
@@ -364,7 +363,7 @@ FROM station.Employees e
 JOIN station.Positions p ON e.pos_id = p.ID;
 
 CREATE VIEW station.BusStopInfo AS
-SELECT bs.bs_name AS BusStopName, rp.next_point_id AS Distance
+SELECT bs.bs_name AS BusStopName, rp.next_point_id AS NextStopId
 FROM station.bus_stop bs
 JOIN station.route_points rp ON bs.ID = rp.bus_stop_id;
 
@@ -423,6 +422,33 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+
+REVOKE ALL PRIVILEGES ON DATABASE kulishkin_in_db FROM managerr;
+REVOKE ALL PRIVILEGES ON SCHEMA station FROM managerr;
+REVOKE ALL PRIVILEGES ON TABLE station.RaceList FROM managerr;
+REVOKE ALL PRIVILEGES ON DATABASE kulishkin_in_db FROM managerr_user;
+REVOKE ALL PRIVILEGES ON SCHEMA station FROM managerr_user;
+REVOKE ALL PRIVILEGES ON TABLE station.RaceList FROM managerr_user;
+DROP USER IF EXISTS managerr_user;
+DROP ROLE IF EXISTS managerr;
+
+REVOKE ALL PRIVILEGES ON DATABASE kulishkin_in_db FROM driver;
+REVOKE ALL PRIVILEGES ON SCHEMA station FROM driver;
+REVOKE ALL PRIVILEGES ON TABLE station.Bus FROM driver;
+REVOKE ALL PRIVILEGES ON DATABASE kulishkin_in_db FROM driver_user;
+REVOKE ALL PRIVILEGES ON SCHEMA station FROM driver_user;
+REVOKE ALL PRIVILEGES ON TABLE station.Bus FROM driver_user;
+DROP USER IF EXISTS driver_user;
+DROP ROLE IF EXISTS driver;
+
+REVOKE ALL PRIVILEGES ON DATABASE kulishkin_in_db FROM passanger;
+REVOKE ALL PRIVILEGES ON SCHEMA station FROM passanger;
+REVOKE ALL PRIVILEGES ON TABLE station.Passangers, station.RaceList, station.Race FROM passanger;
+REVOKE ALL PRIVILEGES ON DATABASE kulishkin_in_db FROM passanger_user;
+REVOKE ALL PRIVILEGES ON SCHEMA station FROM passanger_user;
+REVOKE ALL PRIVILEGES ON TABLE station.Passangers, station.RaceList, station.Race FROM passanger_user;
+DROP USER IF EXISTS passanger_user;
+DROP ROLE IF EXISTS passanger;
 
 CREATE ROLE managerr;
 CREATE USER managerr_user WITH PASSWORD '1234';
