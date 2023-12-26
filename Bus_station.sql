@@ -368,21 +368,6 @@ SELECT bs.bs_name AS BusStopName, rp.next_point_id AS Distance
 FROM station.bus_stop bs
 JOIN station.route_points rp ON bs.ID = rp.bus_stop_id;
 
-CREATE VIEW station.PassengerCountByRouteAndGender AS
-SELECT r.route_name AS Route, p.sex AS Gender, COUNT(rl.passanger_id) AS PassengerCount
-FROM station.RaceList rl
-JOIN station.Race rc ON rl.race_id = rc.ID
-JOIN station.Routes r ON rc.route_id = r.ID
-JOIN station.Passangers p ON rl.passanger_id = p.ID
-GROUP BY r.route_name, p.sex;
-
-CREATE VIEW station.BusCountByModelAndMark AS
-SELECT m.ModelName AS Model, d.MarkName AS Mark, COUNT(b.ID) AS BusCount
-FROM station.Bus b
-JOIN station.Models m ON b.Model_id = m.ID
-JOIN station.Marks d ON m.Mark_ID = d.ID
-GROUP BY m.ModelName, d.MarkName;
-
 
 
 CREATE OR REPLACE FUNCTION update_last_service_date() RETURNS TRIGGER AS $$
@@ -407,36 +392,33 @@ DECLARE
 	i INT;
 BEGIN
   FOR i IN 1..n LOOP
-    EXECUTE insert_employee();
-    EXECUTE insert_passanger();
+    call insert_employee();
+    call insert_passanger();
   END LOOP;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION insert_employee() RETURNS VOID AS
+CREATE OR REPLACE PROCEDURE insert_employee() AS
 $$
 DECLARE
-	DOB DATE = DATEADD(DAY, -RAND() * 365 * 50, GETDATE());
-	IdPosition INT = CEILING(RAND() * 10);
-	RetireDate DATE = DATE_TRUNC('day', NOW() + (RANDOM() * 365 * 10 || ' days')::INTERVAL);
+	IdPosition INT = CEILING(RANDOM() * 5);
 BEGIN
-	INSERT INTO station.Employee (first_name, second_name, last_name, birthdate, hire_date, retire_date, pos_id)
-	VALUES ('Агент', '', 'Смит', DOB, NOW(), RetireDate, IdPosition);
+	INSERT INTO station.Employees (first_name, second_name, last_name, birthdate, hire_date, retire_date, pos_id)
+	VALUES ('Агент', '', 'Смит', '1984-01-01', NOW(), '2077-01-01', IdPosition);
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE PROCEDURE insert_passanger() AS
+CREATE OR REPLACE PROCEDURE insert_passanger() AS
 $$
 DECLARE
-	i INT := CEIL(RANDOM() * 9999999999);
-	doc_type INT = CEILING(RAND() * 3);
-	doc_series INT = CEILING(RAND() * 1000);
-	doc_num INT = CEILING(RAND() * 1000000);
+	doc_type INT = CEILING(RANDOM() * 3);
+	doc_series INT = CEILING(RANDOM() * 1000);
+	doc_num INT = CEILING(RANDOM() * 1000000);
 	sex VARCHAR(1) = 'M';
-	phone_num VARCHAR(10) = REPLICATE('0', 10 - LEN(i)) + CAST(i AS VARCHAR(10));
+	phone_num VARCHAR(10) = REPEAT(FLOOR(RANDOM() * 9)::TEXT, 10);
 BEGIN
-	INSERT INTO Passanger (first_name, second_name, last_name, birthdate, doc_type, doc_series, doc_num, sex, phone_num)
-	VALUES ('Агент', '', 'Смит', DOB, doc_type, doc_series, doc_num, sex, phone_num);
+	INSERT INTO station.Passangers (first_name, second_name, last_name, birthdate, doc_type, doc_series, doc_num, sex, phone_num)
+	VALUES ('Агент', '', 'Смит', '1984-01-01', doc_type, doc_series, doc_num, sex, phone_num);
 END;
 $$ LANGUAGE plpgsql;
 
