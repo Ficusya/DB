@@ -383,13 +383,6 @@ JOIN station.Models m ON b.Model_id = m.ID
 JOIN station.Marks d ON m.Mark_ID = d.ID
 GROUP BY m.ModelName, d.MarkName;
 
-CREATE VIEW station.FuelConsumptionByBusModel AS
-SELECT m.ModelName AS BusModel, SUM(m.FuelStorage * rc.distance) AS TotalFuel
-FROM station.Models m
-JOIN station.Bus b ON m.ID = b.Model_id
-JOIN station.Race rc ON b.ID = rc.bus_id
-GROUP BY m.ModelName;
-
 
 
 CREATE OR REPLACE FUNCTION update_last_service_date() RETURNS TRIGGER AS $$
