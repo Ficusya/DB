@@ -1,4 +1,31 @@
-DROP SCHEMA IF EXISTS station CASCADE;
+DROP VIEW IF EXISTS modelinfo;
+DROP VIEW IF EXISTS employeeinfo;
+DROP VIEW IF EXISTS busstopinfo;
+DROP VIEW IF EXISTS routeinfo;
+DROP VIEW IF EXISTS raceinfo;
+DROP VIEW IF EXISTS passangersracesinfo;
+
+drop procedure if exists generate_data(integer);
+drop procedure if exists insert_race();
+
+DROP TABLE IF EXISTS station.RaceList;
+DROP TABLE IF EXISTS station.Race;
+DROP TABLE IF EXISTS station.Bus;
+DROP TABLE IF EXISTS station.Models;
+DROP TABLE IF EXISTS station.Marks;
+DROP TABLE IF EXISTS station.Employees;
+DROP TABLE IF EXISTS station.Positions;
+
+ALTER TABLE station.Route_points DROP CONSTRAINT IF EXISTS route_points_fk_route_id;
+
+DROP TABLE IF EXISTS station.Routes;
+DROP TABLE IF EXISTS station.Route_points;
+DROP TABLE IF EXISTS station.Bus_stop;
+DROP TABLE IF EXISTS station.Passangers;
+
+drop function if exists update_last_service_date();
+
+DROP SCHEMA IF EXISTS station;
 
 CREATE SCHEMA IF NOT EXISTS station
     AUTHORIZATION kulishkin_in;
@@ -10,10 +37,6 @@ GRANT ALL ON SCHEMA station TO kulishkin_in;
 
 ALTER ROLE kulishkin_in IN DATABASE kulishkin_in_db
     SET search_path TO station, public;
-
-DROP TABLE IF EXISTS station.Bus, station.Marks, station.Models, station.Employees, station.Positions, 
-	station.Bus_stop, station.Routes, station.Route_poins, station.Race, station.Passangers, station.RaceList cascade;
-
 
 CREATE TABLE  IF NOT EXISTS station.Bus (
 	ID serial NOT NULL,
@@ -367,7 +390,17 @@ SELECT bs.bs_name AS NextBusStopName, rp.next_point_id AS NextStopId
 FROM station.bus_stop bs
 JOIN station.route_points rp ON bs.ID = rp.bus_stop_id;
 
+CREATE VIEW station.RaceInfo AS
+SELECT r.ID, r.start_date, r.finish_date, r.duration, rt.route_name, b.gosnum, e.first_name, e.second_name, e.last_name
+FROM station.Race r
+JOIN station.routes rt ON r.route_id = rt.ID
+JOIN station.Bus b ON r.bus_id = b.ID
+JOIN station.Employees e ON r.driver_id = e.ID;
 
+CREATE VIEW station.PassangersRacesInfo AS
+SELECT p.first_name AS firstname, p.second_name AS secondname, p.last_name as lastname, p.doc_type as doc, p.doc_series as docseria, p.doc_num as docnum, p.phone_num as phone, r.race_id as raceid, r.seat_num as seat, r.route_start as startpoint, r.route_finish as finishpoint
+FROM station.Passangers p
+JOIN station.RaceList r ON p.ID = r.passanger_id;
 
 CREATE OR REPLACE FUNCTION update_last_service_date() RETURNS TRIGGER AS $$
 BEGIN
@@ -391,33 +424,23 @@ DECLARE
 	i INT;
 BEGIN
   FOR i IN 1..n LOOP
-    call insert_employee();
-    call insert_passanger();
+	call insert_race();
   END LOOP;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE PROCEDURE insert_employee() AS
+CREATE OR REPLACE PROCEDURE insert_race() AS
 $$
 DECLARE
-	IdPosition INT = CEILING(RANDOM() * 5);
+randomSD text = to_char((now() - random() * interval '365 days')::timestamp, 'YYYY-MM-DD HH24:MI:SS');
+randomFD text = to_char((now() + random() * interval '365 days')::timestamp, 'YYYY-MM-DD HH24:MI:SS');
+randomD text = TO_CHAR(randomFD::timestamp - randomSD::timestamp, 'HH24:MI:SS');
+randomRID int = (SELECT ID FROM station.routes ORDER BY random() LIMIT 1);
+randomBID int = (SELECT ID FROM station.bus ORDER BY random() LIMIT 1);
+randomDID int = (SELECT ID FROM station.employees ORDER BY random() LIMIT 1);
 BEGIN
-	INSERT INTO station.Employees (first_name, second_name, last_name, birthdate, hire_date, retire_date, pos_id)
-	VALUES ('Агент', '', 'Смит', '1984-01-01', NOW(), '2077-01-01', IdPosition);
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE PROCEDURE insert_passanger() AS
-$$
-DECLARE
-	doc_type INT = CEILING(RANDOM() * 3);
-	doc_series INT = CEILING(RANDOM() * 1000);
-	doc_num INT = CEILING(RANDOM() * 1000000);
-	sex VARCHAR(1) = 'M';
-	phone_num VARCHAR(10) = REPEAT(FLOOR(RANDOM() * 9)::TEXT, 10);
-BEGIN
-	INSERT INTO station.Passangers (first_name, second_name, last_name, birthdate, doc_type, doc_series, doc_num, sex, phone_num)
-	VALUES ('Агент', '', 'Смит', '1984-01-01', doc_type, doc_series, doc_num, sex, phone_num);
+	INSERT INTO station.Race (start_date, finish_date, duration, route_id, bus_id, driver_id)
+	VALUES (randomSD, randomFD, randomD, randomRID, randomBID, randomDID);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -435,10 +458,10 @@ DROP ROLE IF EXISTS managerr;
 REVOKE ALL PRIVILEGES ON DATABASE kulishkin_in_db FROM driver;
 REVOKE ALL PRIVILEGES ON SCHEMA station FROM driver;
 REVOKE ALL PRIVILEGES ON TABLE station.Bus FROM driver;
-REVOKE ALL PRIVILEGES ON DATABASE kulishkin_in_db FROM driver_user;
-REVOKE ALL PRIVILEGES ON SCHEMA station FROM driver_user;
-REVOKE ALL PRIVILEGES ON TABLE station.Bus FROM driver_user;
-DROP USER IF EXISTS driver_user;
+REVOKE ALL PRIVILEGES ON DATABASE kulishkin_in_db FROM driverr_user;
+REVOKE ALL PRIVILEGES ON SCHEMA station FROM driverr_user;
+REVOKE ALL PRIVILEGES ON TABLE station.Bus FROM driverr_user;
+DROP USER IF EXISTS driverr_user;
 DROP ROLE IF EXISTS driver;
 
 REVOKE ALL PRIVILEGES ON DATABASE kulishkin_in_db FROM passanger;
@@ -455,14 +478,14 @@ CREATE USER managerr_user WITH PASSWORD '1234';
 GRANT CONNECT ON DATABASE kulishkin_in_db TO managerr;
 GRANT USAGE ON SCHEMA station TO managerr;
 GRANT managerr TO managerr_user;
-GRANT SELECT, INSERT, UPDATE ON TABLE station.RaceList TO managerr;
+GRANT SELECT, INSERT, UPDATE ON TABLE station.RaceList, station.Bus TO managerr;
 
 CREATE ROLE driver;
-CREATE USER driver_user WITH PASSWORD '1234';
+CREATE USER driverr_user WITH PASSWORD '1234';
 GRANT CONNECT ON DATABASE kulishkin_in_db TO driver;
 GRANT USAGE ON SCHEMA station TO driver;
-GRANT driver TO driver_user;
-GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE station.Bus TO driver;
+GRANT driver TO driverr_user;
+GRANT SELECT, UPDATE ON TABLE station.Bus TO driver;
 
 CREATE ROLE passanger;
 CREATE USER passanger_user WITH PASSWORD '1234';
